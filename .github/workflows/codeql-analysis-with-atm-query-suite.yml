@@ -1,0 +1,118 @@
+name: "CodeQL + ATM analysis"
+
+on:
+  push:
+    paths:
+      - '.github/workflows/codeql-analysis-with-atm-query-suite.yml'
+  workflow_dispatch:
+
+env:
+  BASE_URL: 'https://atmcodeqlpublicdata.blob.core.windows.net/atmpublic/query-suite/v1.0.3.test+3a6b9a6'
+  CLI_ADDITIONS_CHECKSUM: 'bdcee682a1ad5239e72ab27c1eb4c66ff16dac369bde962c80c40e063a27b2540814ae889432c617a84061e9687091a5cfaf263197ebbd0dda9d58f4226238f2'
+  MODEL_CHECKSUM: 'ff4b22b080f9e768e3587b607d84325ac51c7adaf65ae76407072b2d36ebc658'
+  QLPACK_CHECKSUM: '54f7aaf11355ac0bad364462d0a180c8e05aa3641020397ef5bdbbe8b992e05417b20c2afde0db1aba74e3e24bd73e3cfd0bdf2d2c737ac81b42ee3bee49c4d7'
+
+jobs:
+  CodeQL-Build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install ATM query pack
+        run: |
+          qlpack_url="${BASE_URL}/codeql-atm-qlpack.tar.gz"
+          echo "Attempting to download ATM query pack from ${qlpack_url}"
+          azcopy10 cp "${qlpack_url}" qlpack.tar.gz
+          if ! echo "${QLPACK_CHECKSUM} *qlpack.tar.gz" | shasum -c; then
+            echo "::error::Failed to validate ATM query pack checksum. Expected ${QLPACK_CHECKSUM}, was " \
+              "$(sha512sum -b qlpack.tar.gz | awk '{ print $1 }')"
+            exit 1
+          fi
+
+          mkdir -p .github/codeql
+          atm_qlpack_path=".github/codeql/codeql-javascript-atm"
+          mkdir ${atm_qlpack_path}
+          tar -xvzf qlpack.tar.gz -C ${atm_qlpack_path}
+          rm qlpack.tar.gz
+
+          ls -lR ${atm_qlpack_path}
+
+          # Add ATM query pack to the CodeQL search path
+          CODEQL_CONFIG_FILE="${RUNNER_TEMP}/codeql_config"
+          echo "CODEQL_CONFIG_FILE=${CODEQL_CONFIG_FILE}" >> ${GITHUB_ENV}
+          echo "--additional-packs ${atm_qlpack_path}" >> ${CODEQL_CONFIG_FILE}
+
+          echo "ATM CodeQL CLI config file contents:"
+          cat ${CODEQL_CONFIG_FILE}
+
+          echo "name: \"ATM CodeQL config\"" > .github/codeql/codeql-config.yml
+          echo "disable-default-queries: true" >> .github/codeql/codeql-config.yml
+          echo "queries:" >> .github/codeql/codeql-config.yml
+          echo "  - uses: ./${atm_qlpack_path}/codeql-suites/javascript-atm-code-scanning.qls" >> .github/codeql/codeql-config.yml
+
+          echo "ATM Code Scanning config file contents:"
+          cat .github/codeql/codeql-config.yml
+
+
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        id: codeql-init
+        uses: github/codeql-action/init@v1
+        with:
+          config-file: ./.github/codeql/codeql-config.yml
+          languages: javascript
+          db-location: '${{ github.workspace }}/codeql-database'
+
+      - name: Install ATM CLI additions
+        env:
+          CODEQL_PATH: ${{ steps.codeql-init.outputs.codeql-path }}
+        run: |
+          cli_root="$(dirname ${CODEQL_PATH})"
+          echo "Using CodeQL CLI root at ${cli_root}"
+
+          cli_additions_url="${BASE_URL}/codeql-atm-cli-additions.tar.gz"
+          echo "Attempting to download ATM CLI additions from ${cli_additions_url}"
+          azcopy10 cp "${cli_additions_url}" cli-additions.tar.gz
+          if ! echo "${CLI_ADDITIONS_CHECKSUM} *cli-additions.tar.gz" | sha512sum -c; then
+            echo "::error::Failed to validate ATM CLI additions checksum. Expected ${CLI_ADDITIONS_CHECKSUM}, was " \
+              "$(sha512sum -b cli-additions.tar.gz | awk '{ print $1 }')"
+            exit 1
+          fi
+
+          tar -xvzf cli-additions.tar.gz -C ${cli_root}
+          rm cli-additions.tar.gz
+
+          ls -lR ${cli_root}/lib-extra
+          ls -lR ${cli_root}/ml-models
+          
+          echo "Model properties:"
+          cat ${cli_root}/ml-models/*.qlmodel/model.properties
+
+          echo "Checking that the model checksum matches the expected one defined in the 'env'" \
+            "property of the workflow definition"
+          if ! grep -q "checksum=${MODEL_CHECKSUM}" ${cli_root}/ml-models/*.qlmodel/model.properties; then
+            echo "::error::Failed to validate ATM model checksum. Expected checksum=${MODEL_CHECKSUM}, was" \
+              "$(grep 'checksum' ${cli_root}/ml-models/*.qlmodel/model.properties)"
+            exit 1
+          fi
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v1
+        with:
+          ram: 5120
+          output: '.github/codeql/codeql-javascript-atm/results'
+          threads: 1
+
+      - name: Upload SARIF results output
+        uses: actions/upload-artifact@v2
+        with:
+          name: javascript-atm.sarif
+          path: .github/codeql/codeql-javascript-atm/results/*.sarif
+      
+      - name: Upload CodeQL database
+        uses: actions/upload-artifact@v2
+        with:
+          name: codeql-database
+          path: '${{ github.workspace }}/codeql-database'
