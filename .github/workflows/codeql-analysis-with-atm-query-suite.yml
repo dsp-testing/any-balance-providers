@@ -42,7 +42,9 @@ jobs:
           # Add ATM query pack to the CodeQL search path
           CODEQL_CONFIG_FILE="${RUNNER_TEMP}/codeql_config"
           echo "CODEQL_CONFIG_FILE=${CODEQL_CONFIG_FILE}" >> ${GITHUB_ENV}
-          echo "--additional-packs ${atm_qlpack_path}" >> ${CODEQL_CONFIG_FILE}
+          # Also set verbosity and store log
+          logdir='${{ github.workspace }}/log'
+          echo "--additional-packs ${atm_qlpack_path} --verbosity=progress+++ --logdir ${logdir}" >> ${CODEQL_CONFIG_FILE}
 
           echo "ATM CodeQL CLI config file contents:"
           cat ${CODEQL_CONFIG_FILE}
@@ -103,16 +105,9 @@ jobs:
         with:
           ram: 5120
           output: '.github/codeql/codeql-javascript-atm/results'
-          threads: 1
 
-      - name: Upload SARIF results output
+      - name: Upload CodeQL log
         uses: actions/upload-artifact@v2
         with:
-          name: javascript-atm.sarif
-          path: .github/codeql/codeql-javascript-atm/results/*.sarif
-      
-      - name: Upload CodeQL database
-        uses: actions/upload-artifact@v2
-        with:
-          name: codeql-database
-          path: '${{ github.workspace }}/codeql-database'
+          name: codeql-log
+          path: '${{ github.workspace }}/log'
