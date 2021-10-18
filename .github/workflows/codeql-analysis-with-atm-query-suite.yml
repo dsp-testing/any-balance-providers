@@ -1,16 +1,13 @@
 name: "CodeQL + ATM analysis"
 
 on:
-  push:
-    paths:
-      - '.github/workflows/codeql-analysis-with-atm-query-suite.yml'
   workflow_dispatch:
 
 env:
-  BASE_URL: 'https://atmcodeqlpublicdata.blob.core.windows.net/atmpublic/query-suite/v1.0.3.test+3a6b9a6'
-  CLI_ADDITIONS_CHECKSUM: 'bdcee682a1ad5239e72ab27c1eb4c66ff16dac369bde962c80c40e063a27b2540814ae889432c617a84061e9687091a5cfaf263197ebbd0dda9d58f4226238f2'
+  BASE_URL: 'https://atmcodeqlpublicdata.blob.core.windows.net/atmpublic/query-suite/v1.0.3.test+b41c3dc'
+  CLI_ADDITIONS_CHECKSUM: '2817f45a37f9ecd9bb238477baa31e24e68cd27f8ba91372cd5dedc46dbb7c6d34f572ec4c059fcf3c429970a9d042af9d21183e49e55392943fab806c75fedc'
   MODEL_CHECKSUM: 'ff4b22b080f9e768e3587b607d84325ac51c7adaf65ae76407072b2d36ebc658'
-  QLPACK_CHECKSUM: '54f7aaf11355ac0bad364462d0a180c8e05aa3641020397ef5bdbbe8b992e05417b20c2afde0db1aba74e3e24bd73e3cfd0bdf2d2c737ac81b42ee3bee49c4d7'
+  QLPACK_CHECKSUM: '2464a2255d26d23397fdd63a50626ac05ac359780f77ce6cc18f9e5bba5aebf01a3369a37249748b8d715a44d04b972b270f78ac7d43db7022125467b5b06a68'
 
 jobs:
   CodeQL-Build:
@@ -42,9 +39,17 @@ jobs:
           # Add ATM query pack to the CodeQL search path
           CODEQL_CONFIG_FILE="${RUNNER_TEMP}/codeql_config"
           echo "CODEQL_CONFIG_FILE=${CODEQL_CONFIG_FILE}" >> ${GITHUB_ENV}
-          # Also set verbosity and store log
+
+          # XXXX
+          # Also set verbosity and store log. N.B. Logging will cause slower execution time!
+          # In fact we see Running queries for javascript
+          # /opt/hostedtoolcache/CodeQL/0.0.0-20210921/x64/codeql/codeql database run-queries --ram=5120 --threads=2 /home/runner/work/any-balance-providers/any-balance-providers/codeql-database/javascript --min-disk-free=1024 -v --additional-packs /home/runner/work/any-balance-providers/any-balance-providers /home/runner/work/any-balance-providers/any-balance-providers/codeql-database/javascript-queries-custom-0.qls
+          # Writing logs to /home/runner/work/any-balance-providers/any-balance-providers/codeql-database/javascript/log/database-run-queries-20211013.152719.146.log.
+          # echo "--additional-packs ${atm_qlpack_path} --verbosity=progress+++ --logdir ${logdir}" >> ${CODEQL_CONFIG_FILE}
+          # XXXX
+
           logdir='${{ github.workspace }}/log'
-          echo "--additional-packs ${atm_qlpack_path} --verbosity=progress+++ --logdir ${logdir}" >> ${CODEQL_CONFIG_FILE}
+          echo "--additional-packs ${atm_qlpack_path}" >> ${CODEQL_CONFIG_FILE}
 
           echo "ATM CodeQL CLI config file contents:"
           cat ${CODEQL_CONFIG_FILE}
