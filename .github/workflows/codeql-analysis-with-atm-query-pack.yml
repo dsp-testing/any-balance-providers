@@ -28,30 +28,4 @@ jobs:
         run: |
           ${CODEQL_PATH} pack download codeql/javascript-experimental-atm-queries
 
-      - name: Run ATM queries
-        env:
-          CODEQL_PATH: ${{ steps.codeql-init.outputs.codeql-path }}
-        run: |
-          set -exu
-
-          db='${{ github.workspace }}/codeql-database/javascript'
-
-          ${CODEQL_PATH} database analyze \
-            --threads=1 \
-            --ram=5120 \
-            --insecurely-load-models-from-packs \
-            --insecurely-execute-ml-model-checksums b4420b8ea7706c9ee3b8f6066c00085c3331edf19efe7fe8d40bb16025ffff78 \
-            --rerun \
-            --format sarif-latest \
-            --output results.sarif.json \
-            --additional-packs ~/.codeql \
-            -- ${db} javascript-atm-code-scanning.qls
-
-      - name: Upload Adaptive Threat Modeling results
-        uses: actions/upload-artifact@v2
-        with:
-          name: results.sarif.json
-          path: results.sarif.json
-
-
 
