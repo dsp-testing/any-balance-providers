@@ -39,8 +39,7 @@ jobs:
           db='${{ github.workspace }}/codeql-database/javascript'
 
           ${CODEQL_PATH} database analyze \
-            --threads=2 \
-            --ram=6000 \
+            --threads=1 \
             --insecurely-load-models-from-packs \
             --insecurely-execute-ml-model-checksums b4420b8ea7706c9ee3b8f6066c00085c3331edf19efe7fe8d40bb16025ffff78 \
             --rerun \
