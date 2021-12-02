@@ -40,7 +40,7 @@ jobs:
 
           ${CODEQL_PATH} database analyze \
             --threads=1 \
-            --ram=12000 \
+            --ram=3000 \
             --insecurely-load-models-from-packs \
             --insecurely-execute-ml-model-checksums b4420b8ea7706c9ee3b8f6066c00085c3331edf19efe7fe8d40bb16025ffff78 \
             --rerun \
