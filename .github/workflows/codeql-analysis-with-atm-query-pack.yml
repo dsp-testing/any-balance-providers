@@ -10,7 +10,7 @@ env:
         "run-queries": [
           "--insecurely-load-models-from-packs",
           "--insecurely-execute-ml-model-checksums",
-          "b4420b8ea7706c9ee3b8f6066c00085c3331edf19efe7fe8d40bb16025ffff78"
+          "1161846db82103aad7f9bb5cf7335fce444bfde9aca6f75b3cf473fbcd8fe210"
         ]
       }
     }
