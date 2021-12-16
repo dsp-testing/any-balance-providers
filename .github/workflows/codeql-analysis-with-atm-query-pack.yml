@@ -10,13 +10,13 @@ env:
         "run-queries": [
           "--insecurely-load-models-from-packs",
           "--insecurely-execute-ml-model-checksums",
-          "1161846db82103aad7f9bb5cf7335fce444bfde9aca6f75b3cf473fbcd8fe210"
+          "97c1d2662ee26bcbf74408bfe43821a4b3527b1b640234751ce80b7fc6a91a1f"
         ]
       }
     }
 
 jobs:
-  CodeQL-Build:
+  CodeQL-Analyze:
     # CodeQL runs on ubuntu-latest, windows-latest, and macos-latest
     runs-on: ubuntu-latest
 
@@ -34,11 +34,12 @@ jobs:
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@6a9a623c776ba2f0bf524bab14b5fd01ec12ad1d
+        uses: github/codeql-action/init@9703f2e3b044dca7fd7ac286980013077dbd0c06
         with:
           languages: javascript
-          tools: https://github.com/dsp-testing/codeql-cli-nightlies/releases/download/codeql-bundle-20211130/codeql-bundle-linux64.tar.gz
+          queries: security-extended
+          tools: https://github.com/dsp-testing/codeql-cli-nightlies/releases/download/codeql-bundle-20211215/codeql-bundle-linux64.tar.gz
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@6a9a623c776ba2f0bf524bab14b5fd01ec12ad1d
+        uses: github/codeql-action/analyze@9703f2e3b044dca7fd7ac286980013077dbd0c06
 
