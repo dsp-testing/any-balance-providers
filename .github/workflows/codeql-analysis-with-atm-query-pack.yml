@@ -10,7 +10,7 @@ env:
         "run-queries": [
           "--insecurely-load-models-from-packs",
           "--insecurely-execute-ml-model-checksums",
-          "b4420b8ea7706c9ee3b8f6066c00085c3331edf19efe7fe8d40bb16025ffff78"
+          "97c1d2662ee26bcbf74408bfe43821a4b3527b1b640234751ce80b7fc6a91a1f"
         ]
       }
     }
@@ -34,11 +34,17 @@ jobs:
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
+        # use ATM
         uses: github/codeql-action/init@ed086de5d5cb51a84653163f8c4e4ef91021b904
+        # don't use ATM
+        # uses: github/codeql-action/init@v1
         with:
           languages: javascript
           queries: security-extended
           tools: https://github.com/github/codeql-action/releases/download/codeql-bundle-20220112/codeql-bundle-linux64.tar.gz
 
       - name: Perform CodeQL Analysis
+        #  use ATM
         uses: github/codeql-action/analyze@ed086de5d5cb51a84653163f8c4e4ef91021b904
+        # don't use ATM
+        # uses: github/codeql-action/analyze@v1  
