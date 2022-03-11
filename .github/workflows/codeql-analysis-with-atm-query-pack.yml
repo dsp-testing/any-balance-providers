@@ -1,17 +1,7 @@
-name: "CodeQL Analysis with ATM"
+name: "CodeQL Analysis with ATM (internal test)"
 
 on: [push, pull_request]
   
-env:
-  CODEQL_ACTION_EXTRA_OPTIONS: >-
-    {
-      "database": {
-        "run-queries": [
-          "--insecurely-load-models-from-packs"
-        ]
-      }
-    }
-
 jobs:
   CodeQL-Build:
     # CodeQL runs on ubuntu-latest, windows-latest, and macos-latest
@@ -34,7 +24,7 @@ jobs:
         uses: github/codeql-action/init@main
         with:
           languages: javascript
-          packs: codeql/javascript-experimental-atm-queries@0.0.6
+          packs: codeql/javascript-experimental-atm-queries@0.1.0
           tools: latest
           debug: true
 
